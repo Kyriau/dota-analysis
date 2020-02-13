@@ -1,42 +1,36 @@
+import org.json.JSONObject;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.Random;
+import java.util.LinkedList;
+import java.util.List;
 
 public class ItemFetcher implements Runnable {
 
-    private static Random rand = new Random();
-
     public void run() {
 
-        String[] urls = getItemURLArray();
-        for(String url : urls) {
-            try {
-                Thread.sleep(rand.nextInt(1000) + 500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            getItemData("https://liquipedia.net" + url);
-        }
+        List<ItemDatum> items = getItems();
+        generateCSV(items);
 
     }
 
-    private String[] getItemURLArray() {
+    private static List<ItemDatum> getItems() {
 
-        try{
+        try {
 
-            String path = "https://liquipedia.net/dota2/Portal:Items";
-            InputStream is = new URL(path).openStream();
-            byte[] raw = is.readAllBytes();
-            String html = new String(raw);
+            List<ItemDatum> items = items = new LinkedList<>();
 
-            String[] matches = html.split("<div class=\"responsive\"[^>]*><a href=\"");
-            String[] items = new String[matches.length - 1];
-            for(int i = 1; i < matches.length; i++) {
-                items[i - 1] = matches[i].substring(0, matches[i].indexOf("\""));
+            String path = "dota-analysis/res/items.json";
+            FileInputStream is = new FileInputStream(path);
+            String raw = new String(is.readAllBytes());
+            is.close();
+
+            JSONObject json = new JSONObject(raw);
+            for(String key : json.keySet()) {
+                JSONObject item = (JSONObject) json.get(key);
+                items.add(new ItemDatum(item));
             }
-
-            System.out.printf("Found %d items.%n", items.length);
 
             return items;
 
@@ -44,20 +38,27 @@ public class ItemFetcher implements Runnable {
             e.printStackTrace();
         }
 
-        // This line should only be reached if an exception was thrown above.
-        throw new IllegalStateException("getItemURLArray() did not return properly.");
+        return null;
 
     }
 
-    private void getItemData(String url) {
+    private void generateCSV(List<ItemDatum> items) {
+
+        StringBuilder output = new StringBuilder();
+
+        output.append(ItemDatum.generateCSVHeader());
+        output.append("\n");
+
+        for(ItemDatum item : items) {
+            output.append(item.generateCSVEntry());
+            output.append("\n");
+        }
 
         try {
-
-            InputStream is = new URL(url).openStream();
-            byte[] raw = is.readAllBytes();
-            System.out.printf("Received %d bytes.%n", raw.length);
-            String html = new String(raw);
-
+            FileOutputStream writer = new FileOutputStream("DotaItems.csv");
+            writer.write(output.toString().getBytes());
+            writer.flush();
+            writer.close();
         } catch(IOException e) {
             e.printStackTrace();
         }
@@ -65,7 +66,9 @@ public class ItemFetcher implements Runnable {
     }
 
     public static void main(String[] args) {
+
         new Thread(new ItemFetcher()).start();
+
     }
 
 }
