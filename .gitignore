@@ -1,0 +1,14 @@
+# OSX metadata
+**/*.DS_Store
+**/META-INF/*
+
+# IntelliJ project data
+.idea/**
+**/*.idea
+*.iml
+out/**/*.class
+target/**/*.class
+classes/**
+
+# Saved game logs
+logs/*.txt
