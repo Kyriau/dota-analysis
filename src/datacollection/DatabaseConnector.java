@@ -1,26 +1,25 @@
 package datacollection;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class DatabaseConnector {
     
-    public Connection getConnection() throws SQLException {
-        
-        Connection conn = null;
-        return conn;
-        
+    private Connection conn;
+    
+    public void insertRawResult(String query, String json) throws SQLException {
+        PreparedStatement insertion = conn.prepareStatement("INSERT INTO RawOpenDotaResult (timeReceived, openDotaQuery, jsonResult) values (?, ?, ?);");
+        insertion.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+        insertion.setString(2, query);
+        insertion.setString(3, json);
+        insertion.execute();
     }
     
-    public static void main(String[] args) {
-        
-        DatabaseConnector dc = new DatabaseConnector();
-        try {
-            dc.getConnection();
-        } catch(SQLException e) {
-        
-        }
-        
+    public void connect() throws SQLException {
+        conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/Dota_Analysis?user=root&password=SC2-MtGoneaday");
+    }
+    
+    public void disconnect() throws SQLException {
+        conn.close();
     }
 
 }
