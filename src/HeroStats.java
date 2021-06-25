@@ -31,7 +31,8 @@ public class HeroStats {
                 matches.add(Long.toString(item.getLong("match_id")));
             }
 
-            for(String match : matches) {URL playerMatch = new URL(base, "matches/" + match);
+            for(String match : matches) {
+                URL playerMatch = new URL(base, "matches/" + match);
                 InputStream matchStream = playerMatch.openStream();
                 String matchRaw = new String(matchStream.readAllBytes());
                 JSONObject matchJSON = new JSONObject(matchRaw);
